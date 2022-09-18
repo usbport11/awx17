@@ -33,6 +33,7 @@ apt update
 apt upgrade
 </pre>
 
+Is it need to install gcc?
 <pre>
 apt install acl
 apt install nginx
@@ -50,7 +51,7 @@ apt install unzip
 apt install pwgen
 apt install net-tools
 apt install supervisord
-apt install gcc (?)
+apt install gcc
 apt install libpcre3-dev
 apt install libpython3.9-dev
 apt install pkg-config libxml2-dev libxmlsec1-dev libxmlsec1-openssl
