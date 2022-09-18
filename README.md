@@ -85,7 +85,7 @@ mkdir -p /etc/tower/conf.d
 mkdir -p /var/lib/awx/rsyslog
 </pre>
 
-Seach layer with size 115 mb extract and copy to /var/lib/awx
+Seach layer with size 115 mb. Extract it and copy to /var/lib/awx
 <pre>
 mkdir -p /tmp/awx-17.1.0
 cd /tmp
