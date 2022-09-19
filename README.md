@@ -346,4 +346,7 @@ awx-manage create_preload_data
 launch_awx.sh
 </pre>
 
-After check web - need check tasks run
+After check web - need check tasks run <br>
+
+LDAP<br>
+Web - Settings - Authorization - LDAP
