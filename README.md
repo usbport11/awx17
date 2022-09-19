@@ -348,5 +348,13 @@ launch_awx.sh
 
 After check web - need check tasks run <br>
 
-LDAP<br>
-Web - Settings - Authorization - LDAP
+<b>LDAP</b><br>
+
+Web - Settings - Authorization - LDAP Settings - Default - Edit<br>
+
+LDAP Server URI <br>
+LDAP Bind Password <br>
+LDAP Bind DN <br>
+LDAP Require Group <br>
+
+Save
