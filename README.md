@@ -1,5 +1,6 @@
 Need web access to https://pypi.org/ (on install time)<br>
 Need web access to https://hub.docker.com/ (on install time)<br>
+Need web access to https://github.com/ (on install time)<br>
 
 <pre>
 nano /etc/networks/interfaces
