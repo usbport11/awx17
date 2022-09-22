@@ -26,7 +26,7 @@ alias grep='grep --color=auto'
 nano /etc/apt/sources.list
 deb http://ftp.ru.debian.org/debian bullseye main contrib
 deb http://ftp.ru.debian.org/debian bullseye-updates main contrib
-deb [arch=amd64] https://download.docker.com/linux/debian bullseye stable
+<s>deb [arch=amd64] https://download.docker.com/linux/debian bullseye stable</s>
 </pre>
 
 <pre>
