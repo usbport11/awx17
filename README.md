@@ -11,6 +11,9 @@ iface enp0s3 inet static
   dns-nameservers 192.168.1.1
 </pre>
 
+Set hostname as cluster name<br>
+Here it awx<br>
+
 <pre>
 ifdown enp0s3
 ifup enp0s3
