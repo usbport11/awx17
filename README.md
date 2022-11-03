@@ -343,8 +343,132 @@ nano /etc/supervisord.conf
 <pre>
 awx-manage migrate --no-input
 awx-manage createsuperuser --username admin
-awx-manage create_preload_data
-launch_awx.sh
+awx-manage create_preload_data (not needed)
+</pre>
+
+<pre>
+nano /etc/supervisord.conf
+
+[supervisord]
+nodaemon = True
+umask = 022
+logfile = /dev/stdout
+logfile_maxbytes = 0
+pidfile = /var/run/supervisor/supervisor.web.pid
+
+[program:nginx]
+command = nginx -g "daemon off;"
+autostart = true
+autorestart = true
+stopwaitsecs = 5
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[program:uwsgi]
+command = /var/lib/awx/venv/awx/bin/uwsgi --chdir=/var/lib/awx --home=/var/lib/awx/venv/awx --socket 127.0.0.1:8050 --module=awx.wsgi:application --vacuum --processes=5 --harakiri=120 --no-orphans --master --max-requests=1000 --master-fifo=/var/lib/awx/awxfifo --lazy-apps -b 32768
+directory = /var/lib/awx
+autostart = true
+autorestart = true
+stopwaitsecs = 15
+stopsignal = INT
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[program:daphne]
+command = /var/lib/awx/venv/awx/bin/daphne -b 127.0.0.1 -p 8051 --websocket_timeout -1 awx.asgi:channel_layer
+directory = /var/lib/awx
+autostart = true
+autorestart = true
+stopwaitsecs = 5
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[program:wsbroadcast]
+command = awx-manage run_wsbroadcast
+directory = /var/lib/awx
+autostart = true
+autorestart = true
+stopwaitsecs = 5
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[program:awx-rsyslogd]
+command = rsyslogd -n -i /var/run/awx-rsyslog/rsyslog.pid -f /var/lib/awx/rsyslog/rsyslog.conf
+autostart = true
+autorestart = true
+stopwaitsecs = 5
+stopsignal=TERM
+stopasgroup=true
+killasgroup=true
+redirect_stderr=true
+stdout_logfile=/dev/stderr
+stdout_logfile_maxbytes=0
+
+[program:dispatcher]
+command = awx-manage run_dispatcher
+directory = /var/lib/awx
+autostart = true
+autorestart = true
+stopwaitsecs = 5
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[program:callback-receiver]
+command = awx-manage run_callback_receiver
+directory = /var/lib/awx
+autostart = true
+autorestart = true
+stopwaitsecs = 5
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[group:tower-processes]
+programs=nginx,uwsgi,daphne,wsbroadcast,awx-rsyslogd,dispatcher,callback-receiver
+priority=5
+
+[eventlistener:awx-config-watcher]
+command=/usr/bin/config-watcher
+stderr_logfile=/dev/stdout
+stderr_logfile_maxbytes=0
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+events=TICK_60
+priority=0
+
+[unix_http_server]
+file=/var/run/supervisor/supervisor.web.sock
+
+[supervisorctl]
+serverurl=unix:///var/run/supervisor/supervisor.web.sock ; use a unix:// URL  for a unix socket
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+</pre>
+
+<pre>
+Compare cluster id and uuid
+
+nano /etc/tower/settings.py
+
+CLUSTER_HOST_ID = "awx"
+SYSTEM_UUID = '00000000-0000-0000-0000-000000000000'
+
+su - postgres
+psql
+\c awx
+select * from main_instance;
 </pre>
 
 After check web - need check tasks run <br>
