@@ -335,9 +335,38 @@ unixsocketperm 700
 </pre>
 
 <pre>
-nano /etc/supervisord.conf
-[uwsgi]
---chdir=/var/lib/awx --home=/var/lib/awx/venv/awx
+nano t /usr/bin/launch_awx.sh
+
+#!/usr/bin/env bash
+if [ `id -u` -ge 500 ]; then
+    echo "awx:x:`id -u`:`id -g`:,,,:/var/lib/awx:/bin/bash" >> /tmp/passwd
+    cat /tmp/passwd > /etc/passwd
+    rm /tmp/passwd
+fi
+
+source /etc/tower/conf.d/environment.sh
+
+ANSIBLE_REMOTE_TEMP=/tmp ANSIBLE_LOCAL_TEMP=/tmp ansible -i "127.0.0.1," -c local -v -m wait_for -a "host=$DATABASE_HOST port=$DATABASE_PORT" all
+ANSIBLE_REMOTE_TEMP=/tmp ANSIBLE_LOCAL_TEMP=/tmp ansible -i "127.0.0.1," -c local -v -m postgresql_db --become-user $DATABASE_USER -a "name=$DATABASE_NAME owner=$DATABASE_USER login_user=$DATABASE_USER login_host=$DATABASE_HOST login_password=$DATABASE_PASSWORD port=$DATABASE_PORT" all
+
+awx-manage collectstatic --noinput --clear
+
+if [ -z "$AWX_SKIP_MIGRATIONS" ]; then
+    awx-manage migrate --noinput
+fi
+
+if [ -z "$AWX_SKIP_PROVISION_INSTANCE" ]; then
+    awx-manage provision_instance --hostname=$(hostname)
+fi
+
+if [ -z "$AWX_SKIP_REGISTERQUEUE" ]; then
+    awx-manage register_queue --queuename=tower --instance_percent=100
+fi
+
+unset $(cut -d = -f -1 /etc/tower/conf.d/environment.sh)
+
+supervisord -c /etc/supervisord.conf
+
 </pre>
 
 <pre>
@@ -471,7 +500,20 @@ psql
 select * from main_instance;
 </pre>
 
+<pre>
+launch_awx.sh
+</pre>
+
 After check web - need check tasks run <br>
+
+<pre>
+Delete pending
+
+awx-manage shell_plus
+
+Inventory.objects.filter(pending_deletion=True).update(pending_deletion=False)
+Inventory.objects.filter(id=ID).delete()
+</pre>
 
 <b>LDAP</b><br>
 
