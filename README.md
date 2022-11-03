@@ -206,7 +206,6 @@ rm -fr _cffi_backend.cpython-36m-x86_64-linux-gnu.so
 rm -fr psycopg2*
 rm -fr xmlsec*
 rm -fr lxml*
-rm -fr psutil*
 </pre>
 
 <b>Here may be mistakes in paths</b><br>
@@ -222,13 +221,14 @@ cp -r /usr/lib/python3/dist-packages/psycopg2* /var/lib/awx/venv/awx/lib/python3
 cp -r /usr/local/lib/python3.9/dist-packages/xmlsec* /var/lib/awx/venv/awx/lib/python3.9/site-packages
 cp /usr/local/lib/python3.9/dist-packages/xmlsec.cpython-39-x86_64-linux-gnu.so /var/lib/awx/venv/awx/lib/python3.9/site-packages
 cp -r /usr/local/lib/python3.9/dist-packages/lxml* /var/lib/awx/venv/awx/lib/python3.9/site-packages
-cp -r /usr/local/lib/python3.9/dist-packages/psutil* /var/lib/awx/venv/awx/lib/python3.9/site-packages
 </pre>
 
-Check that awx-manage at least starting
+Check that awx-manage at least starting<br>
 <pre>
 ./awx-manage --help
 </pre>
+
+Prepare postgresql<br>
 
 <pre>
 nano /etc/postgresql/13/main/pg_hba.conf
@@ -250,6 +250,14 @@ awx=# alter database awx owner to awx;
 awx=# \q
 exit
 </pre>
+
+Generate self-signed certificate if it needed<br>
+
+<pre>
+openssl req -newkey rsa:4096 -x509 -sha256 -days 3650 -nodes -out /root/site.crt -keyout /root/site.key
+</pre>
+
+Prepare nginx<br>
 
 <pre>
 cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.old
@@ -291,8 +299,13 @@ http {
     }
 
     server {
-        listen 8052 default_server;
-        server_name _;
+        listen 80 default_server;
+	
+	#listen 443 ssl;
+	#ssl_certificate     /root/site.crt;
+        #ssl_certificate_key /root/site.key;
+	
+        server_name awx;
         keepalive_timeout 65;
         add_header Strict-Transport-Security max-age=15768000;
         add_header X-Frame-Options "DENY";
@@ -546,6 +559,31 @@ awx-manage shell_plus
 
 Inventory.objects.filter(pending_deletion=True).update(pending_deletion=False)
 Inventory.objects.filter(id=ID).delete()
+</pre>
+
+<b>Create test playbook</b><br>
+
+<pre>
+1) create credentials
+Resources - Credentials - Add
+Name: user1
+Credential Type: Machine
+
+2) create inventory
+Resources - Inventories - Add - Add Inventory
+Name: test1
+
+3) create host
+Resources - Hosts - Add
+Name: awx
+Variables: ansible_host: 192.168.1.100
+Inventory: test1
+
+4) run playbook
+Resources - Inventories - test - Hosts - Run Command
+Module: shell
+Arguments: cat /etc/*release
+Next - Select Credential - Launch
 </pre>
 
 <b>LDAP</b><br>
