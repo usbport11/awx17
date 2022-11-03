@@ -116,6 +116,7 @@ chmod 755 /usr/bin/launch_awx_task.sh
 
 <pre>
 nano /etc/tower/conf.d/environment.sh
+
 DATABASE_USER=awx
 DATABASE_NAME=awx
 DATABASE_HOST=localhost
@@ -131,6 +132,7 @@ chmod 600 /etc/tower/conf.d/environment.sh
 
 <pre>
 nano /etc/tower/conf.d/credentials.py
+
 DATABASES = {
     'default': {
         'ATOMIC_REQUESTS': True,
@@ -162,10 +164,12 @@ chmod -R g+rw /var/lib/awx/vendor/awx_ansible_collections
 touch /tmp/dirs.sh
 chmod /tmp/755 dirs.sh
 nano dirs.sh
+
 dirs=(/var/lib/awx /var/lib/awx/rsyslog /var/lib/awx/rsyslog/conf.d /var/run/awx-rsyslog /var/log/tower /var/run/supervisor)
 for dir in ${dirs[@]};
 do mkdir -m 0775 -p $dir ; chmod g+rw $dir ; chgrp root $dir ;
 done
+
 /tmp/dirs.sh
 </pre>
 
@@ -200,6 +204,8 @@ rm -fr xmlsec*
 rm -fr lxml*
 </pre>
 
+<b>Here may be mistakes in paths</b><br>
+
 <pre>
 cp -r /usr/local/lib/python3.9/dist-packages/ldap* /var/lib/awx/venv/awx/lib/python3.9/site-packages
 cp /usr/local/lib/python3.9/dist-packages/_ldap.cpython-39-x86_64-linux-gnu.so /var/lib/awx/venv/awx/lib/python3.9/site-packages
@@ -220,16 +226,23 @@ Check that awx-manage at least starting
 
 <pre>
 nano /etc/postgresql/13/main/pg_hba.conf
+
 local   all             postgres                                trust
-local   all             all                                     trust
+local	all		awx					trust
+local   all             all                                     peer
 </pre>
 
 <pre>
 systemctl restart postgresql
+
 psql -U postgres
 postgres=# create database awx;
 postgres=# create user awx with encrypted password 'awx';
 postgres=# grant all privileges on database awx to awx;
+postgres=# \c awx
+awx=# alter database awx owner to awx;
+awx=# \q
+exit
 </pre>
 
 <pre>
@@ -322,16 +335,11 @@ systemctl disable nginx
 systemctl stop nginx
 </pre>
 
-Directoties deleted after restart server!
-<pre>
-mkdir /var/run/supervisor
-mkdir /var/run/awx-rsyslog
-</pre>
-
 <pre>
 nano /etc/redis/redis.conf
-unixsocket /var/run/redis/redis.sock
-unixsocketperm 700
+bind 127.0.0.1
+unixsocket /var/run/redis/redis.sock #IMPORTANT!
+unixsocketperm 700 #may be 660
 </pre>
 
 <pre>
@@ -348,6 +356,9 @@ source /etc/tower/conf.d/environment.sh
 
 ANSIBLE_REMOTE_TEMP=/tmp ANSIBLE_LOCAL_TEMP=/tmp ansible -i "127.0.0.1," -c local -v -m wait_for -a "host=$DATABASE_HOST port=$DATABASE_PORT" all
 ANSIBLE_REMOTE_TEMP=/tmp ANSIBLE_LOCAL_TEMP=/tmp ansible -i "127.0.0.1," -c local -v -m postgresql_db --become-user $DATABASE_USER -a "name=$DATABASE_NAME owner=$DATABASE_USER login_user=$DATABASE_USER login_host=$DATABASE_HOST login_password=$DATABASE_PASSWORD port=$DATABASE_PORT" all
+
+mkdir -p /var/run/awx-rsyslog
+mkdir -p /var/run/redis
 
 awx-manage collectstatic --noinput --clear
 
@@ -366,7 +377,6 @@ fi
 unset $(cut -d = -f -1 /etc/tower/conf.d/environment.sh)
 
 supervisord -c /etc/supervisord.conf
-
 </pre>
 
 <pre>
@@ -504,7 +514,24 @@ select * from main_instance;
 launch_awx.sh
 </pre>
 
-After check web - need check tasks run <br>
+May be daemon created (important to change log destinations in /etc/supervisord.conf)
+<pre>
+nano /etc/systemd/system/awx.service
+
+[Unit]
+Description=awx service
+[Service]
+Type=fork
+PID=/var/run/awx.pid
+ExecStart=/usr/bin/launch_awx.sh
+ExecStop=kill $PID
+[Install]
+WantedBy=multi-user.target
+
+systemctl daemon-reload
+</pre>
+
+<b>Remarks</b><br>
 
 <pre>
 Delete pending
