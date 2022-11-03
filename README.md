@@ -42,6 +42,7 @@ Is it need to install gcc?
 apt install acl
 apt install nginx
 apt install ansible
+apt install sshpass
 apt install postgresql
 apt install redis
 apt install git
@@ -205,6 +206,7 @@ rm -fr _cffi_backend.cpython-36m-x86_64-linux-gnu.so
 rm -fr psycopg2*
 rm -fr xmlsec*
 rm -fr lxml*
+rm -fr psutil*
 </pre>
 
 <b>Here may be mistakes in paths</b><br>
@@ -220,6 +222,7 @@ cp -r /usr/lib/python3/dist-packages/psycopg2* /var/lib/awx/venv/awx/lib/python3
 cp -r /usr/local/lib/python3.9/dist-packages/xmlsec* /var/lib/awx/venv/awx/lib/python3.9/site-packages
 cp /usr/local/lib/python3.9/dist-packages/xmlsec.cpython-39-x86_64-linux-gnu.so /var/lib/awx/venv/awx/lib/python3.9/site-packages
 cp -r /usr/local/lib/python3.9/dist-packages/lxml* /var/lib/awx/venv/awx/lib/python3.9/site-packages
+cp -r /usr/local/lib/python3.9/dist-packages/psutil* /var/lib/awx/venv/awx/lib/python3.9/site-packages
 </pre>
 
 Check that awx-manage at least starting
