@@ -221,6 +221,12 @@ cp -r /usr/lib/python3/dist-packages/psycopg2* /var/lib/awx/venv/awx/lib/python3
 cp -r /usr/local/lib/python3.9/dist-packages/xmlsec* /var/lib/awx/venv/awx/lib/python3.9/site-packages
 cp /usr/local/lib/python3.9/dist-packages/xmlsec.cpython-39-x86_64-linux-gnu.so /var/lib/awx/venv/awx/lib/python3.9/site-packages
 cp -r /usr/local/lib/python3.9/dist-packages/lxml* /var/lib/awx/venv/awx/lib/python3.9/site-packages
+
+cd /var/lib/awx/venv/awx/lib/python3.9/site-packages
+rm -fr psutil*
+cp -r /usr/local/lib/python3.9/dist-packages/psutil* /var/lib/awx/venv/ansible/lib/python3.9/site-packages
+cd /usr/bin
+ln -s python3.9 python
 </pre>
 
 Check that awx-manage at least starting<br>
